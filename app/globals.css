@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #0b0d12;
+}
+
+body {
+  background-color: theme('colors.void');
+  color: theme('colors.paper');
+  font-family: var(--font-body), sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: theme('colors.signal.DEFAULT');
+  color: theme('colors.void');
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: theme('colors.void');
+}
+::-webkit-scrollbar-thumb {
+  background: theme('colors.surface2');
+  border-radius: 999px;
+  border: 2px solid theme('colors.void');
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* focus visibility kept intentional, not suppressed */
+:focus-visible {
+  outline: 2px solid theme('colors.signal.glow');
+  outline-offset: 3px;
+}
+
+.grid-field {
+  background-image: theme('backgroundImage.grid-fine');
+  background-size: theme('backgroundSize.grid');
+  background-position: center top;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.mono-eyebrow {
+  font-family: var(--font-mono), monospace;
+  letter-spacing: theme('letterSpacing.wide2');
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.node-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: theme('colors.signal.glow');
+  box-shadow: 0 0 8px 2px rgba(124, 147, 255, 0.6);
+}
+
+.gradient-fade-b {
+  background: linear-gradient(180deg, rgba(11, 13, 18, 0) 0%, #0b0d12 100%);
+}
+
+.gradient-fade-t {
+  background: linear-gradient(0deg, rgba(11, 13, 18, 0) 0%, #0b0d12 100%);
+}
+
+.hairline {
+  background: theme('colors.line');
+}
