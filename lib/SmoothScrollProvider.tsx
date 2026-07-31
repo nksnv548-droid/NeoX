@@ -1,7 +1,8 @@
 'use client';
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import Lenis from '@studio-freight/lenis';
+import Lenis from 'lenis';
+import 'lenis/dist/lenis.css';
 import { ensureGsapRegistered, gsap, ScrollTrigger } from '@/lib/gsap';
 
 const LenisContext = createContext<Lenis | null>(null);
@@ -25,6 +26,7 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       smoothWheel: !prefersReduced,
       wheelMultiplier: 1,
       touchMultiplier: 1.1,
+      autoRaf: false,
     });
 
     lenisRef.current = lenis;
