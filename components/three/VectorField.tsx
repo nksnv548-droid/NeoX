@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef } from 'react';
+import { Component, Suspense, useMemo, useRef, type ReactNode } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Physics, RigidBody, CuboidCollider, type RapierRigidBody } from '@react-three/rapier';
 import { Icosahedron, Float } from '@react-three/drei';
@@ -39,19 +39,11 @@ function buildNodes(count: number, spread: number): NodeSpec[] {
   return nodes;
 }
 
-function DriftingNode({ spec, boundsRef }: { spec: NodeSpec; boundsRef: React.RefObject<THREE.Vector3> }) {
+function DriftingNode({ spec }: { spec: NodeSpec }) {
   const body = useRef<RapierRigidBody>(null);
-  const impulse = useRef(
-    new THREE.Vector3(
-      (Math.random() - 0.5) * 0.6,
-      (Math.random() - 0.5) * 0.6,
-      (Math.random() - 0.5) * 0.6
-    )
-  );
 
   useFrame((state) => {
     if (!body.current) return;
-    // gentle ambient drift force, like slow current in a vector field
     const t = state.clock.elapsedTime;
     const driftForce = {
       x: Math.sin(t * 0.15 + spec.id) * 0.0006,
@@ -60,7 +52,6 @@ function DriftingNode({ spec, boundsRef }: { spec: NodeSpec; boundsRef: React.Re
     };
     body.current.applyImpulse(driftForce, true);
 
-    // soft recentering so the field doesn't drift away
     const pos = body.current.translation();
     const pull = 0.00025;
     body.current.applyImpulse(
@@ -108,7 +99,6 @@ function CoreOrb() {
 }
 
 function InvisibleBounds() {
-  // soft walls so nodes gently collide and stay within the vector field
   const size = 6;
   return (
     <>
@@ -124,7 +114,6 @@ function InvisibleBounds() {
 
 function Scene({ nodeCount }: { nodeCount: number }) {
   const nodes = useMemo(() => buildNodes(nodeCount, 7), [nodeCount]);
-  const bounds = useRef(new THREE.Vector3(6, 6, 6));
 
   return (
     <>
@@ -135,11 +124,44 @@ function Scene({ nodeCount }: { nodeCount: number }) {
       <Physics gravity={[0, 0, 0]}>
         <InvisibleBounds />
         {nodes.map((n) => (
-          <DriftingNode key={n.id} spec={n} boundsRef={bounds} />
+          <DriftingNode key={n.id} spec={n} />
         ))}
       </Physics>
     </>
   );
+}
+
+const STATIC_FALLBACK = (
+  <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
+    <div className="h-64 w-64 rounded-full border border-signal/30 bg-radial-signal" />
+  </div>
+);
+
+/**
+ * Catches WebGL context failures and any error thrown while the R3F/Rapier
+ * tree mounts, so a device without WebGL (or a WASM load failure) degrades
+ * to the static fallback instead of taking the whole page down with it.
+ */
+class CanvasErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode; fallback: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error('VectorField failed to render, falling back to static visual:', error);
+  }
+
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
 }
 
 export function VectorField() {
@@ -148,24 +170,26 @@ export function VectorField() {
   const nodeCount = tier === 'low' ? 10 : tier === 'mid' ? 18 : 28;
 
   if (reducedMotion) {
-    // static, non-physics fallback: a still wireframe orb, no animation loop
-    return (
-      <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
-        <div className="h-64 w-64 rounded-full border border-signal/30 bg-radial-signal" />
-      </div>
-    );
+    return STATIC_FALLBACK;
   }
 
   return (
     <div className="absolute inset-0" aria-hidden>
-      <Canvas
-        dpr={dpr}
-        camera={{ position: [0, 0, 9], fov: 45 }}
-        gl={{ antialias: tier !== 'low', powerPreference: 'high-performance', alpha: true }}
-        frameloop="always"
-      >
-        <Scene nodeCount={nodeCount} />
-      </Canvas>
+      <CanvasErrorBoundary fallback={STATIC_FALLBACK}>
+        <Canvas
+          dpr={dpr}
+          camera={{ position: [0, 0, 9], fov: 45 }}
+          gl={{ antialias: tier !== 'low', powerPreference: 'high-performance', alpha: true }}
+          frameloop="always"
+        >
+          {/* <Physics> lazily loads the Rapier WASM module and must be
+              wrapped in Suspense — without this, the thrown load-promise
+              had no boundary to resolve against and crashed the page. */}
+          <Suspense fallback={null}>
+            <Scene nodeCount={nodeCount} />
+          </Suspense>
+        </Canvas>
+      </CanvasErrorBoundary>
     </div>
   );
-           }
+    }
