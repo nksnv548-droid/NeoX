@@ -19,10 +19,14 @@ export function CursorReticle() {
     const isTouch = window.matchMedia('(pointer: coarse)').matches;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (isTouch || reduced) return;
+
+    const el = ref.current;
+    if (!el) return;
+
     setEnabled(true);
 
-    const quickX = gsap.quickTo(ref.current, 'x', { duration: 0.35, ease: 'power3.out' });
-    const quickY = gsap.quickTo(ref.current, 'y', { duration: 0.35, ease: 'power3.out' });
+    const quickX = gsap.quickTo(el, 'x', { duration: 0.35, ease: 'power3.out' });
+    const quickY = gsap.quickTo(el, 'y', { duration: 0.35, ease: 'power3.out' });
 
     const onMove = (e: PointerEvent) => {
       quickX(e.clientX);
@@ -52,13 +56,13 @@ export function CursorReticle() {
     };
   }, []);
 
-  if (!enabled) return null;
-
   return (
     <div
       ref={ref}
       aria-hidden
-      className="pointer-events-none fixed left-0 top-0 z-[100] -translate-x-1/2 -translate-y-1/2 mix-blend-difference"
+      className={`pointer-events-none fixed left-0 top-0 z-[100] -translate-x-1/2 -translate-y-1/2 mix-blend-difference ${
+        enabled ? '' : 'hidden'
+      }`}
     >
       <div
         className={`relative flex items-center justify-center transition-[width,height] duration-200 ${
@@ -79,4 +83,4 @@ export function CursorReticle() {
       </div>
     </div>
   );
-      }
+}
