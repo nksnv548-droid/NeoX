@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { gsap, ScrollTrigger } from '@/lib/gsap';
+import { gsap } from '@/lib/gsap';
 import { Button } from '@/components/ui/Button';
 import { NeoXMark } from '@/components/ui/NeoXMark';
 
@@ -112,7 +112,7 @@ export function Contact() {
         <div className="mt-24 flex flex-col gap-8 border-t border-line pt-10 md:mt-32 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-2.5">
             <NeoXMark className="h-5 w-auto text-paper" />
-            <span className="mono-eyebrow text-steel">
+            <span className="mono-eyebrow text-steel" suppressHydrationWarning>
               &copy; {new Date().getFullYear()} NEO X
             </span>
           </div>
@@ -133,4 +133,4 @@ export function Contact() {
       </div>
     </section>
   );
-      }
+}
